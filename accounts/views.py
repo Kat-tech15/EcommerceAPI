@@ -14,7 +14,7 @@ class RegisterView(generics.GenericAPIView):
         if serializer.is_valid():
             user = serializer.save()
             token,_=Token.objects.get_or_create(user=user)
-            return Response({'message': 'User registered successfully!'}, status=status.HTTP_200_OK)
+            return Response({'message': 'User registered successfully!'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(generics.GenericAPIView):
@@ -32,12 +32,12 @@ class LoginView(generics.GenericAPIView):
                 'username': user.username,
                 'email': user.email
             })
-        return Response({'mesaage': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class LogoutView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        permission_classes = [permissions.IsAuthenticated]
 
         try:
             request.user.auth_token.delete()
@@ -49,7 +49,7 @@ class ProfileDetail(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_obj(self):
+    def get_object(self):
         return self.request.user.profile
 
 def health_check(request):
@@ -59,7 +59,7 @@ def health_check(request):
     except Exception as e:
         db_status = f"error: {str(e)}"
     return JsonResponse({
-        "status": "ok" if db_status == "connected" else "ERROR",
+        "status": "OK" if db_status == "connected" else "ERROR",
         "database": db_status,
         "version": "v1.0.0",
         "message": "Ecommerce API is running smoothly."
