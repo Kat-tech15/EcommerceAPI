@@ -1,4 +1,5 @@
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
@@ -10,7 +11,7 @@ from .serializers import UserSerializer, ProfileSerializer
 class RegisterView(generics.GenericAPIView):
     serializer_class = UserSerializer
     def post(self, request, *args, **kwargs):
-        serializer = UserSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             token,_=Token.objects.get_or_create(user=user)
@@ -52,6 +53,7 @@ class ProfileDetail(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user.profile
 
+@api_view(['GET'])
 def health_check(request):
     try:
         connection.ensure_connection()
