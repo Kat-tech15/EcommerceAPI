@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-from rest_framework import permissions, status
-from .serializers import UserSerializer
+from rest_framework import permissions, status, generics
+from .serializers import UserSerializer, ProfileSerializer
 
 
 class RegisterView(APIView):
@@ -40,4 +40,12 @@ class LogoutView(APIView):
         except:
             pass
         return Response({'message': 'User logged out successfully.'}, status=status.HTTP_201_NO_CONTENT)
+    
+class ProfileDetail(generics.RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_obj(self):
+        return self.request.user.profile
+
 
