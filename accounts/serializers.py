@@ -18,8 +18,16 @@ class UserSerializer(serializers.ModelSerializer):
         )
         Token.objects.create(user=user)
         return user
+    
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
 
 class ProfileSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Profile
         fields = ['id', 'user', 'full_name', 'phone', 'address']
+
+class EmptySerializer(serializers.Serializer):
+    pass

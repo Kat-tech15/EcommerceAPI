@@ -1,4 +1,5 @@
-from rest_framework import generics, mixins, permissions
+from rest_framework import generics, mixins, permissions, status
+from rest_framework.response import Response
 from accounts.permissions import IsOwnerOrReadOnly
 from .serializers import ProductSerializer
 from .models import Product
@@ -33,4 +34,5 @@ class ProductDetailView(mixins.RetrieveModelMixin,
         return self.update(request, *args, **kwargs)
     
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+        self.destroy(request, *args, **kwargs)
+        return Response({'message': 'Product deleted successfully!'}, status=status.HTTP_200_OK)
