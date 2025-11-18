@@ -11,6 +11,7 @@ from .serializers import UserSerializer, LoginSerializer, ProfileSerializer, Emp
 
 class RegisterView(generics.GenericAPIView):
     serializer_class = UserSerializer
+
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -21,7 +22,6 @@ class RegisterView(generics.GenericAPIView):
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -30,7 +30,7 @@ class LoginView(generics.GenericAPIView):
         username = serializer.validated_data["username"]
         password = serializer.validated_data["password"]
 
-        user =authenticate(username=username, password=password)
+        user = authenticate(username=username, password=password)
 
         if user:
             token,created = Token.objects.get_or_create(user=user)
