@@ -44,7 +44,7 @@ class VerifyOTPView(generics.GenericAPIView):
         if email_otp.is_expired():
             return Response({'message': 'OTP has expired, please request for onother OTP to verify your emaail.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if user.is_verified = True:
+        if user.is_verified == True:
             user.save()
         
         return Response({'message': 'OTP verified successfully!'}, status=status.HTTP_200_OK)
