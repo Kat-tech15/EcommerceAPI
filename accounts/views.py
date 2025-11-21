@@ -3,10 +3,15 @@ from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from drf_yasg.utils import swagger_auto_schema
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.db import connection
+import random
+from .models import EmailOTP, ContactMessage
+from datetime  import timedelta
+from django.utils import timezone
 from rest_framework import permissions, status, generics
-from .serializers import UserSerializer, LoginSerializer, ProfileSerializer, EmptySerializer
+from .serializers import UserSerializer, LoginSerializer, ProfileSerializer, EmptySerializer, VerifyOTPSerializer, ResendOTPSerializer, ContactMessageSerializer
 
 
 class RegisterView(generics.GenericAPIView):
@@ -20,6 +25,58 @@ class RegisterView(generics.GenericAPIView):
             return Response({'message': 'User registered successfully!'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class VerifyOTPView(generics.GenericAPIView):
+    serializer_class = VerifyOTPSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        code = serializer.validated_data['code']
+
+        try:
+            user = User.objects.get(email=email)
+            email_otp = EmailOTP.objects.get(user=user, code=code)
+        except (User.DoesNotExist, EmailOTP.DoesNotExist):
+            return Response({'message': 'Invalid OTP or Email'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if email_otp.is_expired():
+            return Response({'message': 'OTP has expired, please request for onother OTP to verify your emaail.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_verified = True:
+            user.save()
+        
+        return Response({'message': 'OTP verified successfully!'}, status=status.HTTP_200_OK)
+
+class ResendOTPView(generics.GenericAPIView):
+    serializer_class = ResendOTPSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'message': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        last_otp = EmailOTP.objects.filter(user=user, is_used=False).order_by('expires_at').first()
+        if last_otp:
+            if timezone.now() < last_otp.expires_at - timedelta(minutes=5) + timedelta(minutes=5):
+                wait_time = (last_otp.expires_at - timezone.now()).seconds
+                return Response({'message': f"Please waif {wait_time//60} minutes and {wait_time%60} seconds before requesting for a new OTP."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS)
+            last_otp.delete()
+        
+        code = str(random.randint(100000, 999999))
+        expires_at = timezone.now() + timedelta(minutes=5)
+        otp_instance = EmailOTP.objects.create(code=code, expires_at=expires_at)
+
+        send_otp_to_user(user, otp_instance.code)
+        return Response({'message': 'OTP resend successfully, check your email for an OTP to verify your email.'})
+            
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
@@ -91,4 +148,22 @@ def health_check(request):
         "message": "Ecommerce API is running smoothly."
     })
 
+class ContactMessageCreateView(generics.GenericAPIView):
+    queryset = ContactMessage.objects.all()
+    serializer_class = ContactMessageSerializer
+    permission_classes = [permissions.AllowAny]
 
+    def perform_create(self, serializer):
+        message_instance = serializer.save()
+
+        notify_admin_contact(message_instance)
+    
+class ContactMessageAdminView(generics.ListAPIView):
+    queryset = ContactMessage.objects.all().order_by('-created_at')
+    serializer_class = ContactMessageSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+class ContactMessageDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ContactMessage.objects.all()
+    serializer_class = ContactMessageSerializer
+    permission_classes = [permissions.IsAdminUser]

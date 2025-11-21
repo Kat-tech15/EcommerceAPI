@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Profile
+from .models import Profile, ContactMessage
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -18,7 +18,14 @@ class UserSerializer(serializers.ModelSerializer):
         )
         Token.objects.create(user=user)
         return user
-    
+
+class VerifyOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+class ResendOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -31,3 +38,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class EmptySerializer(serializers.Serializer):
     pass
+
+class ContactMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactMessage
+        fields ['id', 'name', 'email', 'message']
