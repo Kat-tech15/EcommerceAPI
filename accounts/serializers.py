@@ -42,4 +42,4 @@ class EmptySerializer(serializers.Serializer):
 class ContactMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactMessage
-        fields ['id', 'name', 'email', 'message']
+        fields = ['id', 'name', 'email', 'message']
