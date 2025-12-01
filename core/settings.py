@@ -152,14 +152,13 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'SECURITY_DEFINITIONS': {
         'TokenAuth': {
-            'type': 'apikey',
+            'type': 'apiKey',
             'in': 'header',
             'name': 'Authorization',
             'description': 'Format: Token <your_token>',
         }
     },
 }
-
 # allowing sign in and sign up using google account
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
