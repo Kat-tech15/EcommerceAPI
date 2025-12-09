@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.db import connection
 import random
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import EmailOTP, ContactMessage
 from datetime  import timedelta
 from django.utils import timezone
@@ -90,9 +91,10 @@ class LoginView(generics.GenericAPIView):
         user = authenticate(username=username, password=password)
 
         if user:
-            token,created = Token.objects.get_or_create(user=user)
+            refresh  = RefreshToken.for_user(user)
             return Response({
-                'token': token.key,
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
                 'username': user.username,
                 'email': user.email
             })
@@ -102,13 +104,9 @@ class LogoutView(generics.GenericAPIView):
     serializer_class = EmptySerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(operation_description="log out logged-in user",
-                         responses={200: 'User logged out successfully.'},
-                         security=[{'Token': []}])
-
     def post(self, request):
-        if hasattr(request.user, "auth_token"):
-            request.user.auth_token.delete()
+        if hasattr(request.user, "access_token"):
+            request.user.access_token.delete()
 
         return Response({'message': 'User logged out successfully.'}, status=status.HTTP_200_OK)
    

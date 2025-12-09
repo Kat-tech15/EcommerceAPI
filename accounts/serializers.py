@@ -16,7 +16,6 @@ class UserSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password']
         )
-        Token.objects.create(user=user)
         return user
 
 class VerifyOTPSerializer(serializers.Serializer):
