@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -137,3 +138,59 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES' : [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_PAGINATION_CLASSES': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME':  timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    
+}
+
+# enabling authorization in the swagger interface
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'TokenAuth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'Format: Token <your_token>',
+        }
+    },
+}
+# allowing sign in and sign up using google account
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'emial',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'APP': {
+            'client_id' : os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
+        }
+    }
+}
+
+# senting verification otp to sms
+AFRICASTALKING_USERNAME = os.getenv('AFRICASTALKING_USERNAME')
+AFRICASTALKING_API_KEY = os.getenv('AFRICASTALKING_API_KEY')
+
+# setting up user email and password to enable otp verification
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMIAL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS =  True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
