@@ -62,7 +62,7 @@ def health_check(request):
         db_status = f"error: {str(e)}"
     return JsonResponse({
         "status": "OK" if db_status == "connected" else "ERROR",
-        "database": db_status,
+        "database": db_status, 
         "version": "v1.0.0",
         "message": "Ecommerce API is running smoothly."
     })
